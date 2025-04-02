@@ -94,3 +94,15 @@ class VAEDeepKMeans(nn.Module):
     def get_theta(self, x):
         theta, _, _ = self.encode(x)
         return theta
+
+    def get_top_words(self, vocab, num_top_words=20):
+        # Recompute beta with softmax along dim=1
+        dist = self.pairwise_euclidean_distance(self.topic_embeddings, self.word_embeddings)
+        beta = F.softmax(-dist / self.beta_temp, dim=1)  # shape: (num_topic, vocab_size)
+        top_values, top_indices = torch.topk(beta, num_top_words, dim=1)
+        top_words = []
+        for indices in top_indices:
+            # Map indices to actual words using the provided vocab list
+            topic_words = [vocab[idx] for idx in indices.cpu().numpy()]
+            top_words.append(topic_words)
+        return top_words
