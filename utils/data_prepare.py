@@ -7,10 +7,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 from utils.document_embedding import get_document_embeddings
 DATA_NAME = '20NG'
-train_text_path = f'/home/ducanh/Credit/ctop2vec/{DATA_NAME}/train_texts.txt'
-test_text_path = f'/home/ducanh/Credit/ctop2vec/{DATA_NAME}/test_texts.txt'
-vocab_path = f'/home/ducanh/Credit/ctop2vec/{DATA_NAME}/vocab.txt'
-test_label_path = f'/home/ducanh/Credit/ctop2vec/{DATA_NAME}/test_labels.txt'
+train_text_path = f'../datasets/{DATA_NAME}/train_texts.txt'
+test_text_path = f'../datasets/{DATA_NAME}/test_texts.txt'
+vocab_path = f'../datasets/{DATA_NAME}/vocab.txt'
+test_label_path = f'../datasets/{DATA_NAME}/test_labels.txt'
 
 with open(train_text_path, 'r') as file:
     t20ng_documents = file.readlines()
