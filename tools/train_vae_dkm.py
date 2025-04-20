@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from models.vae_dkm import VAEDeepKMeans
 from utils.file_utils import read_text
-from topmost import eva  
+from topmost import eva
 
 def train(args):
     path = args.data_path
@@ -19,6 +19,8 @@ def train(args):
     train_labels = np.loadtxt(f'{path}/train_labels.txt', dtype=int)
     test_labels = np.loadtxt(f'{path}/test_labels.txt', dtype=int)
     vocab = read_text(f'{path}/vocab.txt')
+
+    train_texts = read_text(f'{path}/train_texts.txt')
 
     train_tensor = torch.FloatTensor(train_data)
     test_tensor = torch.FloatTensor(test_data)
@@ -58,9 +60,21 @@ def train(args):
 
         model.eval()
         with torch.no_grad():
+            # Clustering evaluation using the document–topic matrix
             doc_topic_matrix = model.get_theta(test_tensor)
             clustering_results = eva._clustering(doc_topic_matrix, test_labels)
             print(f"Epoch {epoch+1} Clustering results: {clustering_results}")
+
+            # Compute topic coherence (Cv)
+            top_words_list = model.get_top_words(vocab, num_top_words=50)
+            # Convert each topic's list of words into a single space-separated string
+            topic_strs = [' '.join(topic) for topic in top_words_list]
+            cv_score = eva._coherence(train_texts, vocab, topic_strs, coherence_type='c_v', topn=20)
+            print(f"Epoch {epoch+1} Topic Coherence (Cv): {cv_score:.4f}")
+
+            # Compute topic diversity (TD)
+            td_score = eva._diversity(topic_strs)
+            print(f"Epoch {epoch+1} Topic Diversity (TD): {td_score:.4f}")
 
 if __name__ == '__main__':
     import argparse
