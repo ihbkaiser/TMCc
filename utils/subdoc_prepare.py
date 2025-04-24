@@ -1,11 +1,9 @@
 # generate_subdocs.py — Generate fixed‑Q sub-document BoW arrays without padding
 """
 Split each document into exactly Q sub‑documents (segments) and build BoW per segment.
-Output is a list of NumPy arrays, one per document, each of shape [Q, Vw].
-
-Outputs saved:
-  - train_sub.npy: pickled list of length N_train
-  - test_sub.npy:  pickled list of length N_test
+Outputs are saved as NumPy NPZ archives for fast loading with metadata:
+  - train_sub.npz: array 'data' of shape [N_train, Q, Vw], int Q, int Vw
+  - test_sub.npz:  array 'data' of shape [N_test, Q, Vw]
 
 Usage:
     python utils/subdoc_prepare.py --data_path datasets/20NG --num_subdocs 5 --output_dir datasets/20NG
@@ -27,15 +25,7 @@ def split_into_segments(tokens: list[str], num_segments: int) -> list[list[str]]
 
 
 def build_subdoc_bows(texts: list[str], vocab: list[str], num_segments: int) -> list[np.ndarray]:
-    """
-    Build BoW for sub‑documents without padding:
-      texts: list of raw docs
-      vocab: list of Vw words
-      num_segments: Q
 
-    Returns:
-      bows_list: list of length N_docs, each entry is np.ndarray [Q, Vw]
-    """
     word2idx = {w: i for i, w in enumerate(vocab)}
     bows_list: list[np.ndarray] = []
     for doc in texts:
@@ -64,30 +54,34 @@ def main(args):
     vocab       = read_text(os.path.join(dp, 'vocab.txt'))
 
     Q = args.num_subdocs
-    print(f"Generating {Q} sub-docs per document (no padding)...")
+    print(f"Generating {Q} sub-docs per document and building BoW...")
 
     train_sub = build_subdoc_bows(train_texts, vocab, Q)
     test_sub  = build_subdoc_bows(test_texts,  vocab, Q)
 
-    print(f"→ train: {len(train_sub)} docs, each {train_sub[0].shape} (Q,Vw)")
-    print(f"→ test:  {len(test_sub)} docs, each {test_sub[0].shape} (Q,Vw)")
+    # Stack into dense arrays
+    train_arr = np.stack(train_sub, axis=0)  # [N_train, Q, Vw]
+    test_arr  = np.stack(test_sub,  axis=0)  # [N_test, Q, Vw]
+    Vw = train_arr.shape[2]
 
-    # Save as pickled object arrays (allow_pickle)
-    train_path = os.path.join(out, 'train_sub.npy')
-    test_path  = os.path.join(out, 'test_sub.npy')
-    np.save(train_path, np.array(train_sub, dtype=object), allow_pickle=True)
-    np.save(test_path,  np.array(test_sub,  dtype=object), allow_pickle=True)
+    print(f"→ train_arr: {train_arr.shape}")
+    print(f"→ test_arr:  {test_arr.shape}")
 
-    print(f"Saved sub-doc arrays to:\n  {train_path}\n  {test_path}")
+    # Save as NPZ with metadata
+    train_path = os.path.join(out, 'train_sub.npz')
+    test_path  = os.path.join(out, 'test_sub.npz')
+    np.savez(train_path, data=train_arr, Q=Q, Vw=Vw)
+    np.savez(test_path,  data=test_arr,  Q=Q, Vw=Vw)
 
+    print(f"Saved dense subdoc arrays to:\n  {train_path}\n  {test_path}")
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser("Generate fixed‑Q sub-doc BoW arrays")
-    parser.add_argument('--data_path',   type=str, required=True,
+    parser = argparse.ArgumentParser("Generate fixed‑Q sub-doc BoW (dense NPZ)")
+    parser.add_argument('--data_path',   type=str, default='datasets/20NG',
                         help='Folder with train_texts.txt & vocab.txt')
     parser.add_argument('--num_subdocs', type=int, default=5,
                         help='Fixed number Q of sub-documents per doc')
     parser.add_argument('--output_dir',  type=str, default=None,
-                        help='Directory to save train_sub.npy & test_sub.npy')
+                        help='Directory to save outputs')
     args = parser.parse_args()
     main(args)
