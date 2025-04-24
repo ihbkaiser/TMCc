@@ -81,6 +81,10 @@ class TMSD(nn.Module):
             OT_max_iter=getattr(args, 'OT_max_iter', 5000),
             stopThr=getattr(args, 'stopThr', 0.5e-2)
         )
+        
+        # new hyperparam for the contextual Top2Vec loss
+        self.use_ctx_loss    = getattr(args, "use_ctx_loss", False)
+        self.ctx_sigma       = getattr(args, "ctx_sigma", 1.0)
 
     def reparameterize(self, mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
         if self.training:
@@ -114,7 +118,7 @@ class TMSD(nn.Module):
         dist = self.pairwise_dist(self.topic_embeddings, self.word_embeddings)
         return F.softmax(-dist / self.beta_temp, dim=1)
 
-    def forward(self, x: torch.Tensor, x_sub: torch.Tensor = None) -> dict:
+    def forward(self, x: torch.Tensor, x_sub: torch.Tensor = None, m_sub: torch.Tensor = None) -> dict:
         # document-level encoding
         theta, kl_doc, z = self.encode(x)
         beta = self.get_beta()
@@ -142,20 +146,40 @@ class TMSD(nn.Module):
             recon = F.softmax(self.decoder_bn(theta @ beta), dim=-1)
             nll = -(x * torch.log(recon + 1e-10)).sum(1).mean()
             kl_adapter = torch.tensor(0.0, device=x.device)
-
+            theta_ds = theta.unsqueeze(1)  # treat the whole doc as one “subdoc”
+            
+        # ---------- new contextual Top2Vec regularizer ------------
+        reg_loss = torch.tensor(0.0, device=x.device)
+        if self.use_ctx_loss and m_sub is not None:
+            B, S, K = theta_ds.shape
+            # flatten:
+            θ_flat = theta_ds.reshape(B*S, K)        # (N, K), N=B*S
+            m_flat = m_sub.reshape(B*S, -1)          # (N, E)
+            # normalize m to unit‐length for cosine
+            m_norm = F.normalize(m_flat, dim=1)      # (N, E)
+            # cosine similarity matrix
+            W = torch.exp((m_norm @ m_norm.t()) / self.ctx_sigma)  # (N, N)
+            # pairwise ‖θ_i - θ_j‖ 
+            θ_norm2 = (θ_flat**2).sum(1, keepdim=True)             # (N,1)
+            pair_d2 = θ_norm2 + θ_norm2.t() - 2*(θ_flat @ θ_flat.t())  # squared dist
+            pair_d = torch.sqrt(pair_d2 + 1e-8)                     # (N,N)
+            # half‐sum
+            reg_loss = 0.5 * (W * pair_d).sum()
+        
         cost = self.pairwise_dist(self.topic_embeddings, self.word_embeddings)
         loss_ot = self.ot_loss(cost)
         dist_z = self.pairwise_dist(z, self.cluster_centers)
         p = F.softmax(-dist_z / self.tau, dim=1)
         loss_cluster = (p * torch.sqrt(dist_z + 1e-8)).sum(1).mean()
-        total = nll + kl_doc + kl_adapter + loss_ot
+        total = nll + kl_doc + kl_adapter + loss_ot + reg_loss
         return {
             'loss': total,
             'loss_recon': nll,
             'loss_kl_doc': kl_doc,
             'loss_kl_adapter': kl_adapter,
             'loss_ot': loss_ot,
-            'loss_cluster': loss_cluster
+            'loss_cluster': loss_cluster,
+            'loss_ctx': reg_loss,
         }
 
     def get_theta(self, x: torch.Tensor) -> torch.Tensor:
