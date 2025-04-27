@@ -40,6 +40,12 @@ class DocDataset(Dataset):
     """
     def __init__(self, data_path, prefix):
         subdir = os.path.join(data_path, 'contextual_data')
+        X_train = scipy.sparse.load_npz(f'{data_path}/train_bow.npz').toarray().astype('float32')
+        X_test  = scipy.sparse.load_npz(f'{data_path}/test_bow.npz').toarray().astype('float32')
+        self.train_tensor = torch.FloatTensor(X_train).to(args.device)
+        self.test_tensor  = torch.FloatTensor(X_test).to(args.device)
+        self.train_labels = np.loadtxt(f'{data_path}/train_labels.txt', dtype=int)
+        self.test_labels  = np.loadtxt(f'{data_path}/test_labels.txt', dtype=int)
         self.bow_files = sorted(glob.glob(f"{subdir}/{prefix}_*_sub_*.npz"))
         self.emb_files = [bf.replace('_sub_', '_sub_emb_').replace('.npz', '.npy')
                           for bf in self.bow_files]
@@ -152,6 +158,10 @@ class Trainer:
                 _, cv = TC_on_wikipedia(top_words, cv_type="C_V")
                 td = eva._diversity([' '.join(t) for t in top_words])
                 logging.info(f'  Coherence Cv: {cv:.4f} | Diversity TD: {td:.4f}')
+                doc_topic = self.model.get_theta(self.dataset.test_tensor)
+                clus_res = eva._clustering(doc_topic.cpu().numpy(), self.dataset.test_labels)
+                logging.info(f'  Clustering: {clus_res}')
+                
 
         beta = self.model.get_beta().detach().cpu().numpy()
         return beta
