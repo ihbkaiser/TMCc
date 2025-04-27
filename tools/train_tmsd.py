@@ -10,6 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from models.tmsd import TMSD
 from utils.file_utils import read_text
+from utils.coherence_wiki import TC_on_wikipedia
 from topmost import eva
 
 # Top2Vec imports
@@ -89,6 +90,9 @@ def train(args):
                               .astype('float32')  # (N_docs, S, V)
         train_tensor    = torch.FloatTensor(train_data)
         train_sub_tensor= torch.FloatTensor(train_sub)
+        print("⏳ computing contextual Top2Vec subdoc embeddings…")
+        M_sub = compute_ctx_subdoc_embs(train_texts,
+                                        window_size=args.c_top2vec_smoothing_window)
         ctx_tensor      = torch.FloatTensor(M_sub)
 
         train_dataset = TensorDataset(train_tensor,
@@ -172,10 +176,11 @@ def train(args):
             clustering_results = eva._clustering(θ, test_labels)
             print(f"[Epoch {epoch:03d}] Clustering → {clustering_results}")
 
-            top_words  = model.get_top_words(vocab, num_top_words=50)
+            top_words  = model.get_top_words(vocab, num_top_words=15)
             topic_strs = [' '.join(ws) for ws in top_words]
-            cv = eva._coherence(train_texts, vocab, topic_strs,
-                                coherence_type='c_v', topn=50)
+            # cv = eva._coherence(train_texts, vocab, topic_strs,
+            #                     coherence_type='c_v', topn=50)
+            _, cv = TC_on_wikipedia(top_words, cv_type="C_V")
             td = eva._diversity(topic_strs)
             print(f"[Epoch {epoch:03d}] Coherence (C_v)={cv:.4f}, Diversity={td:.4f}")
 
@@ -197,7 +202,7 @@ if __name__ == '__main__':
     parser.add_argument('--sinkhorn_alpha',            type=float, default=20)
     parser.add_argument('--OT_max_iter',               type=int,   default=1000)
     parser.add_argument('--stopThr',                   type=float, default=0.5e-2)
-    parser.add_argument('--use_subdoc',                type=bool,  default=False)
+    parser.add_argument('--use_subdoc',                type=bool,  default=True)
     parser.add_argument('--adapter_alpha',             type=float, default=0.1)
     # ---- new flags for the contextual Top2Vec loss ----
     parser.add_argument('--use_ctx_loss',              action='store_true',

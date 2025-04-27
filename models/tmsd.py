@@ -142,6 +142,9 @@ class TMSD(nn.Module):
             recon = F.softmax(self.decoder_bn((theta_ds @ beta).view(-1, beta.size(1))).view(B, S, -1), dim=-1)
             nll = -(x_sub * torch.log(recon + 1e-10)).sum(-1).mean()
             kl_adapter = kl_ad.mean()
+            recon_doc = F.softmax(self.decoder_bn(theta @ beta), dim=-1)
+            nll_doc = -(x * torch.log(recon_doc + 1e-10)).sum(1).mean()
+            nll = nll + nll_doc
         else:
             recon = F.softmax(self.decoder_bn(theta @ beta), dim=-1)
             nll = -(x * torch.log(recon + 1e-10)).sum(1).mean()
@@ -186,10 +189,12 @@ class TMSD(nn.Module):
         theta, _, _ = self.encode(x)
         return theta
 
-    def get_top_words(self, vocab: list[str], num_top_words: int) -> list[list[str]]:
-        beta = self.get_beta().detach().cpu().numpy()
-        top_words: list[list[str]] = []
-        for topic_dist in beta:
-            top_idx = np.argsort(topic_dist)[-num_top_words:][::-1]
-            top_words.append([vocab[i] for i in top_idx])
+    def get_top_words(self, vocab, num_top_words=15):
+        dist = self.pairwise_euclidean_distance(self.topic_embeddings, self.word_embeddings)
+        beta = F.softmax(-dist / self.beta_temp, dim=1)
+        top_values, top_indices = torch.topk(beta, num_top_words, dim=1)
+        top_words = []
+        for indices in top_indices:
+            topic_words = [vocab[idx] for idx in indices.cpu().numpy()]
+            top_words.append(topic_words)
         return top_words
