@@ -166,7 +166,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_path',      type=str,   default='datasets/20NG')
     parser.add_argument('--batch_size',     type=int,   default=200)
     parser.add_argument('--en1_units',      type=int,   default=200)
-    parser.add_argument('--num_topic',      type=int,   default=50)
+    parser.add_argument('--num_topic',      type=int,   default=100)
     parser.add_argument('--dropout',        type=float, default=0)
     parser.add_argument('--beta_temp',      type=float, default=0.2)
     parser.add_argument('--tau',            type=float, default=1.0)
