@@ -16,21 +16,9 @@ print(type(test_texts))
 print(len(test_texts))
 print(type(test_texts[0]))
 
-def get_cuda_optimal_device():
-    if not torch.cuda.is_available():
-        return torch.device("cpu")
-    best_device = None
-    best_memory = float('inf')
-    for i in range(torch.cuda.device_count()):
-        mem_usage = torch.cuda.memory_allocated(i)
-        if mem_usage < best_memory:
-            best_memory = mem_usage
-            best_device = i
-    print(f"Optimal device: cuda:{best_device}")
-    return torch.device(f"cuda:1")
 
 def get_optimal_device():
-    return get_cuda_optimal_device() if torch.cuda.is_available() else torch.device("cpu")
+    return torch.device('cuda') if torch.cuda.is_available() else torch.device("cpu")
 
 def sbert_embeddings(
     documents: list[str],
