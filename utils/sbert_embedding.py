@@ -72,3 +72,10 @@ def sbert_embeddings(
 
 train_embeddings = sbert_embeddings(train_texts)  # shape (len(train_texts), D)
 test_embeddings  = sbert_embeddings(test_texts)   # shape (len(test_texts),  D)
+
+train_np = train_embeddings.cpu().numpy()
+test_np  = test_embeddings.cpu().numpy()
+
+import numpy as np
+np.save('datasets/20NG/train_contextual.npy', train_np)
+np.save('datasets/20NG/test_contextual.npy',  test_np)
