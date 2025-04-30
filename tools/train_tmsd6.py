@@ -41,6 +41,8 @@ class DatasetHandler:
         train_sub_path = f"{data_path}/train_sub.npz"
         test_sub_path  = f"{data_path}/test_sub.npz"
         vocab_path     = f"{data_path}/vocab.txt"
+        train_contextual_path = f"{data_path}/train_contextual.npy"
+        test_contextual_path  = f"{data_path}/test_contextual.npy"
 
         # Load vocabulary
         with open(vocab_path, 'r', encoding='utf-8') as f:
@@ -75,6 +77,9 @@ class DatasetHandler:
             batch_size=batch_size,
             shuffle=True
         )
+        
+        self.train_contextual = np.load(train_contextual_path)
+        self.test_contextual  = np.load(test_contextual_path)
 
 
 class BasicTrainer:
