@@ -59,11 +59,25 @@ class TMSD6(nn.Module):
                                                    (1.0 / (args.num_topic * args.num_topic)) * np.sum(1.0 / self.a, axis=1)).T))
         self.mu2.requires_grad = False
         self.var2.requires_grad = False
+        self.embedding_dims = 256
+        
+        self.ctx_mlp_doc = nn.Sequential(
+            nn.Linear(self.embedding_dims, args.en1_units),
+            nn.ReLU(),
+            nn.Linear(args.en1_units, args.vocab_size)
+        )
+        
+        self.ctx_mlp_sub = nn.Sequential(
+            nn.Linear(self.embedding_dims, args.en1_units),
+            nn.ReLU(),
+            nn.Linear(args.en1_units, args.vocab_size)
+        )
 
         self.local_adapter_mu = nn.Parameter(torch.ones_like(self.mu2), requires_grad=False)
         self.local_adapter_var = nn.Parameter(torch.ones_like(self.var2)*args.adapter_alpha, requires_grad=False)
 
-        self.fc11 = nn.Linear(args.vocab_size, args.en1_units)
+        # self.fc11 = nn.Linear(args.vocab_size, args.en1_units)
+        self.fc11 = nn.Linear(2*args.vocab_size, args.en1_units)
         self.fc12 = nn.Linear(args.en1_units, args.en1_units)
         self.fc21 = nn.Linear(args.en1_units, args.num_topic)
         self.fc22 = nn.Linear(args.en1_units, args.num_topic)
@@ -162,8 +176,17 @@ class TMSD6(nn.Module):
         beta = F.softmax(-dist / self.beta_temp, dim=0)
         return beta
 
-    def forward(self, x, x_sub = None):
-        theta, loss_KL, z = self.doc_encode(x)
+    def forward(self, x, x_sub = None, contextual_x = None, contextual_x_sub = None):
+        """
+        x:             (B, V)   BoW
+        contextual_x:  (B, C)   SBERT embeddings or raw texts (List[str])
+        x_sub:         (B, S, V)
+        contextual_x_sub: (B, C)
+        """
+        contextual_x_bow = self.ctx_mlp_doc(contextual_x)   # (B, V)
+        x_new = torch.cat((x, contextual_x_bow), dim=1)  # (B, 2V)
+        
+        theta, loss_KL, z = self.doc_encode(x_new)
         if x_sub is None:
             raise ValueError("x_sub must be provided for sub-document encoding.")
             beta = self.get_beta()
