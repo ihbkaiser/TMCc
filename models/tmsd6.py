@@ -59,7 +59,7 @@ class TMSD6(nn.Module):
                                                    (1.0 / (args.num_topic * args.num_topic)) * np.sum(1.0 / self.a, axis=1)).T))
         self.mu2.requires_grad = False
         self.var2.requires_grad = False
-        self.embedding_dims = 256
+        self.embedding_dims = 384 
         
         self.ctx_mlp_doc = nn.Sequential(
             nn.Linear(self.embedding_dims, args.en1_units),
