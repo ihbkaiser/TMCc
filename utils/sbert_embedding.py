@@ -6,6 +6,7 @@ import torch
 from typing import List, Dict, Any, Tuple
 from transformers import AutoTokenizer, AutoModel
 from torch.utils.data import DataLoader, TensorDataset
+from tqdm import tqdm
 
 from utils.file_utils import read_text
 
@@ -61,7 +62,7 @@ def sbert_embeddings(
     loader = DataLoader(documents, batch_size=batch_size, shuffle=False)
     all_embeddings = []
 
-    for batch in loader:
+    for batch in tqdm(loader, desc="Encoding batches", unit="batch"):
         # batch is a list of strings
         encoded = tokenizer(
             list(batch),
