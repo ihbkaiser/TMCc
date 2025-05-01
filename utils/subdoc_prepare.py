@@ -77,11 +77,11 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Generate fixed‑Q sub-doc BoW (dense NPZ)")
-    parser.add_argument('--data_path',   type=str, default='datasets/20NG',
+    parser.add_argument('--data_path',   type=str, default='tm_datasets/20NG',
                         help='Folder with train_texts.txt & vocab.txt')
     parser.add_argument('--num_subdocs', type=int, default=5,
                         help='Fixed number Q of sub-documents per doc')
-    parser.add_argument('--output_dir',  type=str, default=None,
+    parser.add_argument('--output_dir',  type=str, default='tm_datasets/20NG',
                         help='Directory to save outputs')
     args = parser.parse_args()
     main(args)
