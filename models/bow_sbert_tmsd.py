@@ -222,8 +222,8 @@ class BoW_SBERT_TMSD(nn.Module):
    
         cost_matrix = self.pairwise_euclidean_distance(self.topic_embeddings, self.word_embeddings)
         optimal_transport_loss = self.ECR(cost_matrix)
-        loss = loss_TM + optimal_transport_loss
-        return {'loss': loss, 'loss_TM': loss_TM, 'ot_loss': optimal_transport_loss}
+        loss = loss_TM + optimal_transport_loss + recon_doc_loss
+        return {'loss': loss, 'loss_TM': loss_TM, 'ot_loss': optimal_transport_loss, 'recon_loss': recon_doc_loss}
 
     def get_theta(self, x, contextual_x=None):
         """
