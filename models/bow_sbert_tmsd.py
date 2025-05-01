@@ -78,6 +78,7 @@ class BoW_SBERT_TMSD(nn.Module):
         self.local_adapter_mu = nn.Parameter(torch.ones_like(self.mu2), requires_grad=False)
         self.local_adapter_var = nn.Parameter(torch.ones_like(self.var2)*args.adapter_alpha, requires_grad=False)
 
+        #self.fc11 = nn.Linear(args.vocab_size, args.en1_units)
         self.fc11 = nn.Linear(2*args.vocab_size, args.en1_units)
         self.fc12 = nn.Linear(args.en1_units, args.en1_units)
         self.fc21 = nn.Linear(args.en1_units, args.num_topic)
@@ -92,7 +93,6 @@ class BoW_SBERT_TMSD(nn.Module):
         self.decoder_bn = nn.BatchNorm1d(args.vocab_size)
         self.decoder_bn.weight.requires_grad = False
 
-        # self.sub_fc11 = nn.Linear(args.vocab_size, args.en1_units)
         self.sub_fc11 = nn.Linear(args.vocab_size, args.en1_units)
         self.sub_fc12 = nn.Linear(args.en1_units, args.en1_units)
         self.sub_fc21 = nn.Linear(args.en1_units, args.num_topic)
@@ -185,7 +185,7 @@ class BoW_SBERT_TMSD(nn.Module):
         x_sub:         (B, S, V)
         contextual_x_sub: (B, C)
         """
-        contextual_x_bow = self.ctx_mlp_doc(contextual_x)   # (B, V)
+        contextual_x_bow = self.ctx_mlp_doc(contextual_x)  # (B, V)
         x_new = torch.cat((x, contextual_x_bow), dim=1)  # (B, 2V)
         
         theta, loss_KL, z = self.doc_encode(x_new)
@@ -225,8 +225,14 @@ class BoW_SBERT_TMSD(nn.Module):
         loss = loss_TM + optimal_transport_loss
         return {'loss': loss, 'loss_TM': loss_TM, 'ot_loss': optimal_transport_loss}
 
-    def get_theta(self, x):
-        theta, _, _ = self.doc_encode(x)
+    def get_theta(self, x, contextual_x=None):
+        """
+        x:            (B, V)   BoW
+        contextual_x: (B, C)   optional SBERT embeddings
+        """
+        contextual_x_bow = self.ctx_mlp_doc(contextual_x)  # (B, V)
+        x_new = torch.cat((x, contextual_x_bow), dim=1)  # (B, 2V)
+        theta, _, _ = self.doc_encode(x_new)
         return theta
 
     def get_top_words(self, vocab, num_top_words=15):
