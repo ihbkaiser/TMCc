@@ -223,8 +223,10 @@ class TMSD6(nn.Module):
         loss = loss_TM + optimal_transport_loss
         return {'loss': loss, 'loss_TM': loss_TM, 'ot_loss': optimal_transport_loss}
 
-    def get_theta(self, x):
-        theta, _, _ = self.doc_encode(x)
+    def get_theta(self, x, contextual_x=None):
+        contextual_x_bow = self.ctx_mlp_doc(contextual_x)
+        x_new = torch.cat((x, contextual_x_bow), dim=1)
+        theta, _, _ = self.doc_encode(x_new)
         return theta
 
     def get_top_words(self, vocab, num_top_words=15):
