@@ -203,7 +203,7 @@ if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s"
     )
-    data_path = "datasets/20NG"
+    data_path = "tm_datasets/20NG"
     out_dir = "outputs/tmsd6"
     os.makedirs(out_dir, exist_ok=True)
 
