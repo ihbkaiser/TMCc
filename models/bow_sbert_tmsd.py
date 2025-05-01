@@ -46,9 +46,9 @@ class ECR(nn.Module):
         loss_ECR *= self.weight_loss_ECR
 
         return loss_ECR
-class TMSD6(nn.Module):
+class BoW_SBERT_TMSD(nn.Module):
     def __init__(self, args):
-        super(TMSD6, self).__init__()
+        super(BoW_SBERT_TMSD, self).__init__()
         self.args = args
         self.beta_temp = args.beta_temp
         self.tau = args.tau                  
