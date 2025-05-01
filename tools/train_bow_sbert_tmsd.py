@@ -118,7 +118,7 @@ class BasicTrainer:
     def fit_transform(self, ds, num_top_words=15, verbose=False):
         self.train(ds, verbose)
         top_words = self.export_top_words(ds.vocab, num_top_words)
-        train_theta = self.test(ds.train_data)
+        train_theta = self.test(ds.train_data, ds.contextual_train)
         return top_words, train_theta
 
     def train(self, ds, verbose=False):
@@ -221,7 +221,7 @@ if __name__ == "__main__":
     )
 
     model = BoW_SBERT_TMSD(args)
-    trainer = BasicTrainer(model, epochs=200, learning_rate=2e-3, batch_size=200,
+    trainer = BasicTrainer(model, epochs=10, learning_rate=2e-3, batch_size=200,
                            lr_scheduler=None, lr_step_size=125, log_interval=5)
     tw, train_t = trainer.fit_transform(ds, num_top_words=15, verbose=True)
     trainer.save_beta(out_dir)
