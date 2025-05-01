@@ -78,7 +78,7 @@ class BoW_SBERT_TMSD(nn.Module):
         self.local_adapter_mu = nn.Parameter(torch.ones_like(self.mu2), requires_grad=False)
         self.local_adapter_var = nn.Parameter(torch.ones_like(self.var2)*args.adapter_alpha, requires_grad=False)
 
-        self.fc11 = nn.Linear(args.vocab_size, args.en1_units)
+        self.fc11 = nn.Linear(2*args.vocab_size, args.en1_units)
         self.fc12 = nn.Linear(args.en1_units, args.en1_units)
         self.fc21 = nn.Linear(args.en1_units, args.num_topic)
         self.fc22 = nn.Linear(args.en1_units, args.num_topic)
@@ -93,7 +93,7 @@ class BoW_SBERT_TMSD(nn.Module):
         self.decoder_bn.weight.requires_grad = False
 
         # self.sub_fc11 = nn.Linear(args.vocab_size, args.en1_units)
-        self.sub_fc11 = nn.Linear(2 * args.vocab_size, args.en1_units)
+        self.sub_fc11 = nn.Linear(args.vocab_size, args.en1_units)
         self.sub_fc12 = nn.Linear(args.en1_units, args.en1_units)
         self.sub_fc21 = nn.Linear(args.en1_units, args.num_topic)
         self.sub_fc22 = nn.Linear(args.en1_units, args.num_topic)
