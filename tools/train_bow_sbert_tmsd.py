@@ -224,7 +224,7 @@ if __name__ == "__main__":
         adapter_alpha=0.1,
         beta_temp=0.2,
         tau=1.0,
-        weight_loss_ECR=250.0,
+        weight_loss_ECR=200.0,
         sinkhorn_alpha=20.0,
         sinkhorn_max_iter=100,
         augment_coef=0.5,
