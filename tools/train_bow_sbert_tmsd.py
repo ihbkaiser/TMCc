@@ -39,13 +39,13 @@ class DatasetHandler:
         self.args = SimpleNamespace(data_path=data_path)
         train_doc_path = f"{data_path}/train_bow.npz"
         test_doc_path  = f"{data_path}/test_bow.npz"
-        train_sub_path = f"{data_path}/new_train_sub.npz"
-        test_sub_path  = f"{data_path}/new_test_sub.npz"
+        train_sub_path = f"{data_path}/train_sub.npz"
+        test_sub_path  = f"{data_path}/test_sub.npz"
         vocab_path     = f"{data_path}/vocab.txt"
         train_contextual_path = f"{data_path}/contextual_data/train_contextual.npz"
         test_contextual_path = f"{data_path}/contextual_data/test_contextual.npz"
-        train_contextual_sub_path = f"{data_path}/contextual_data/train_sub_contextual.npz"
-        test_contextual_sub_path = f"{data_path}/contextual_data/test_sub_contextual.npz"
+        train_contextual_sub_path = f"{data_path}/train_sub_contextual.npz"
+        test_contextual_sub_path = f"{data_path}/test_sub_contextual.npz"
         
 
         # Load vocabulary

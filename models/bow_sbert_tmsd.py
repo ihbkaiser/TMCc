@@ -202,8 +202,11 @@ class BoW_SBERT_TMSD(nn.Module):
             recon_doc_loss = -(x * recon_doc.log()).sum(dim=1).mean()
             B, S, V = x_sub.shape
                   
-            flat = contextual_x_sub.view(B*S, -1)
-            flat = self.ctx_mlp_sub(flat) 
+            contextual_x_sub_flat = contextual_x_sub.view(B*S, -1)
+            contextual_x_sub_flat = self.ctx_mlp_sub(contextual_x_sub_flat)
+            contextual_x_sub_bow = contextual_x_sub_flat.view(B, S, -1)  # (B, S, V)
+            x_sub_new = torch.cat((x_sub, contextual_x_sub_bow), dim=2)  # (B, S, 2V) 
+            flat = x_sub_new.view(B*S, -1)
             z_e, kl_ad = self.subdoc_encode(flat)
             z_e = z_e.view(B, S, -1)
             # h = F.softplus(self.sub_fc1(flat))
