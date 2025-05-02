@@ -221,7 +221,7 @@ if __name__ == "__main__":
     )
 
     model = BoW_SBERT_TMSD(args)
-    trainer = BasicTrainer(model, epochs=10, learning_rate=2e-3, batch_size=200,
+    trainer = BasicTrainer(model, epochs=500, learning_rate=2e-3, batch_size=200,
                            lr_scheduler=None, lr_step_size=125, log_interval=5)
     tw, train_t = trainer.fit_transform(ds, num_top_words=15, verbose=True)
     trainer.save_beta(out_dir)
