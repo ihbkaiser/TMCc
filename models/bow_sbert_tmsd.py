@@ -93,7 +93,8 @@ class BoW_SBERT_TMSD(nn.Module):
         self.decoder_bn = nn.BatchNorm1d(args.vocab_size)
         self.decoder_bn.weight.requires_grad = False
 
-        self.sub_fc11 = nn.Linear(args.vocab_size, args.en1_units)
+        # self.sub_fc11 = nn.Linear(args.vocab_size, args.en1_units)
+        self.sub_fc11 = nn.Linear(2*args.vocab_size, args.en1_units)
         self.sub_fc12 = nn.Linear(args.en1_units, args.en1_units)
         self.sub_fc21 = nn.Linear(args.en1_units, args.num_topic)
         self.sub_fc22 = nn.Linear(args.en1_units, args.num_topic)
@@ -183,7 +184,7 @@ class BoW_SBERT_TMSD(nn.Module):
         x:             (B, V)   BoW
         contextual_x:  (B, C)   SBERT embeddings or raw texts (List[str])
         x_sub:         (B, S, V)
-        contextual_x_sub: (B, C)
+        contextual_x_sub: (B, S, C)
         """
         contextual_x_bow = self.ctx_mlp_doc(contextual_x)  # (B, V)
         x_new = torch.cat((x, contextual_x_bow), dim=1)  # (B, 2V)
@@ -200,7 +201,9 @@ class BoW_SBERT_TMSD(nn.Module):
             recon_doc = F.softmax(self.decoder_bn(torch.matmul(theta, beta)), dim=-1)
             recon_doc_loss = -(x * recon_doc.log()).sum(dim=1).mean()
             B, S, V = x_sub.shape
-            flat = x_sub.view(B*S, V) 
+                  
+            flat = contextual_x_sub.view(B*S, -1)
+            flat = self.ctx_mlp_sub(flat) 
             z_e, kl_ad = self.subdoc_encode(flat)
             z_e = z_e.view(B, S, -1)
             # h = F.softplus(self.sub_fc1(flat))
