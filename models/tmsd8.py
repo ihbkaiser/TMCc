@@ -101,6 +101,7 @@ class TMSD6(nn.Module):
         nn.init.trunc_normal_(self.topic_embeddings, std=0.1)
         self.topic_embeddings = nn.Parameter(F.normalize(self.topic_embeddings))
         self.cluster_centers = nn.Parameter(torch.randn(args.num_cluster, args.num_topic))
+        self.lambda_doc = args.lambda_doc
 
         self.ECR = ECR(args.weight_loss_ECR, args.sinkhorn_alpha, args.sinkhorn_max_iter)
 
@@ -198,7 +199,7 @@ class TMSD6(nn.Module):
             x_sub_augment = x_sub + self.args.augment_coef * x.unsqueeze(1)
             nll = -(x_sub_augment * torch.log(recon + 1e-10)).sum(-1).mean()
             kl_adapter = kl_ad.mean()
-            loss_TM = nll + loss_KL + kl_adapter + recon_doc_loss
+            loss_TM = nll + loss_KL + kl_adapter + self.lambda_doc * recon_doc_loss
    
         cost_matrix = self.pairwise_euclidean_distance(self.topic_embeddings, self.word_embeddings)
         optimal_transport_loss = self.ECR(cost_matrix)
