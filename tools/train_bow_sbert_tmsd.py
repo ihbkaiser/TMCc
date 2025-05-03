@@ -27,6 +27,7 @@ from models.bow_sbert_tmsd import BoW_SBERT_TMSD
 from topmost import eva
 from utils.coherence_wiki import TC_on_wikipedia
 from utils.static_utils import print_topic_words
+from utils.irbo import buubyyboo_dth 
 
 
 class DatasetHandler:
@@ -43,6 +44,9 @@ class DatasetHandler:
         vocab_path     = f"{data_path}/vocab.txt"
         train_contextual_path = f"{data_path}/contextual_data/train_contextual.npz"
         test_contextual_path = f"{data_path}/contextual_data/test_contextual.npz"
+        train_contextual_sub_path = f"{data_path}/train_sub_contextual.npz"
+        test_contextual_sub_path = f"{data_path}/test_sub_contextual.npz"
+        
 
         # Load vocabulary
         with open(vocab_path, 'r', encoding='utf-8') as f:
@@ -73,12 +77,18 @@ class DatasetHandler:
         
         train_ctx = np.load(train_contextual_path)['arr_0']
         test_ctx = np.load(test_contextual_path)['arr_0']
+        
+        train_sub_ctx = np.load(train_contextual_sub_path)['data'].astype(np.float32)
+        test_sub_ctx  = np.load(test_contextual_sub_path)['data'].astype(np.float32) 
 
         self.contextual_train = torch.from_numpy(train_ctx)
         self.contextual_test = torch.from_numpy(test_ctx)
+        
+        self.contextual_sub_train = torch.from_numpy(train_sub_ctx)
+        self.contextual_sub_test = torch.from_numpy(test_sub_ctx)
     
         self.train_dataloader = DataLoader(
-            TensorDataset(self.train_data, sub_train, self.contextual_train),
+            TensorDataset(self.train_data, sub_train, self.contextual_train, self.contextual_sub_train),
             batch_size=batch_size,
             shuffle=True
         )
@@ -131,11 +141,12 @@ class BasicTrainer:
             self.model.train()
             loss_acc = defaultdict(float)
 
-            for doc_batch, sub_batch, contextual_batch in ds.train_dataloader:
+            for doc_batch, sub_batch, contextual_batch, contextual_sub_batch in ds.train_dataloader:
                 x = doc_batch.to(self.device)
                 x_sub = sub_batch.to(self.device)
                 contextual_x = contextual_batch.to(self.device)
-                rst = self.model(x, x_sub, contextual_x)
+                contextual_x_sub = contextual_sub_batch.to(self.device)
+                rst = self.model(x, x_sub, contextual_x, contextual_sub_batch)
                 loss = rst['loss']
 
                 opt.zero_grad()
@@ -158,6 +169,7 @@ class BasicTrainer:
                 tw = self.model.get_top_words(ds.vocab, num_top_words=15)
                 _, cv = TC_on_wikipedia(tw, cv_type="C_V"); self.logger.info(f"Coherence Cv: {cv:.4f}")
                 td = eva._diversity([' '.join(t) for t in tw]); self.logger.info(f"Diversity TD: {td:.4f}")
+                irbo_score = buubyyboo_dth(tw, topk=15); self.logger.info(f"IRBO score: {irbo_score:.4f}")
 
     def test(self, data, contextual):
         self.model.eval()
@@ -212,7 +224,7 @@ if __name__ == "__main__":
         adapter_alpha=0.1,
         beta_temp=0.2,
         tau=1.0,
-        weight_loss_ECR=60.0,
+        weight_loss_ECR=200.0,
         sinkhorn_alpha=20.0,
         sinkhorn_max_iter=100,
         augment_coef=0.5,
