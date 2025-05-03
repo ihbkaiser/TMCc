@@ -146,7 +146,7 @@ class BasicTrainer:
                 x_sub = sub_batch.to(self.device)
                 contextual_x = contextual_batch.to(self.device)
                 contextual_x_sub = contextual_sub_batch.to(self.device)
-                rst = self.model(x, x_sub, contextual_x, contextual_sub_batch)
+                rst = self.model(x, x_sub, contextual_x, contextual_x_sub)
                 loss = rst['loss']
 
                 opt.zero_grad()
@@ -224,7 +224,7 @@ if __name__ == "__main__":
         adapter_alpha=0.1,
         beta_temp=0.2,
         tau=1.0,
-        weight_loss_ECR=200.0,
+        weight_loss_ECR=100.0,
         sinkhorn_alpha=20.0,
         sinkhorn_max_iter=100,
         augment_coef=0.5,
