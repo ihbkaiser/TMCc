@@ -202,12 +202,13 @@ if __name__ == "__main__":
         adapter_alpha=0.1,
         beta_temp=0.2,
         tau=1.0,
-        weight_loss_ECR=100.0,
+        weight_loss_ECR=250.0,
         sinkhorn_alpha=20.0,
         sinkhorn_max_iter=1000,
         augment_coef=0,
         data_path=data_path,
         word_embeddings=W_emb,
+        lambda_doc = 1.0
     )
 
     model = TMSD6(args)

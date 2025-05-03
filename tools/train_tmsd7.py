@@ -41,6 +41,7 @@ class DatasetHandler:
         train_sub_path = f"{data_path}/train_sub.npz"
         test_sub_path  = f"{data_path}/test_sub.npz"
         vocab_path     = f"{data_path}/vocab.txt"
+        # run utils/cluster_center.py to generate train_labels.npy
         precomputed_cluster_path = f"{data_path}/contextual_data/train_labels.npy"
 
         # Load vocabulary
@@ -146,7 +147,7 @@ class BasicTrainer:
                 for k,total in loss_acc.items(): msg += f" | {k}: {total/data_size:.4f}"
                 print(msg); self.logger.info(msg)
 
-            if epoch % 10 == 0:
+            if epoch % 5 == 0:
                 train_t, test_t = self.export_theta(ds)
                 clus = eva._clustering(test_t, ds.y_test)
                 self.logger.info(f"Clustering result: {clus}")
@@ -205,16 +206,17 @@ if __name__ == "__main__":
         adapter_alpha=0.1,
         beta_temp=0.2,
         tau=1.0,
-        weight_loss_ECR=60.0,
+        weight_loss_ECR=250.0,
         sinkhorn_alpha=20.0,
-        sinkhorn_max_iter=100,
+        sinkhorn_max_iter=1000,
         augment_coef=0.5,
         data_path=data_path,
         word_embeddings=W_emb,
         #new prior hyperparameters
         clusterinfo = ds.clusterinfo,
         smoothing_count = 0,
-        device="cuda"
+        device="cuda",
+        lambda_doc = 1.0
     )
 
     model = TMSD7(args)

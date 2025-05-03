@@ -57,6 +57,7 @@ class TMSD7(nn.Module):
         self.tau = args.tau                  
         self.num_cluster = args.num_cluster 
         self.clusterinfo = args.clusterinfo
+        self.lambda_doc = args.lambda_doc
         # self.a = np.ones((1, args.num_topic), dtype=np.float32)
         # self.mu2 = nn.Parameter(torch.as_tensor((np.log(self.a).T - np.mean(np.log(self.a), axis=1)).T))
         # self.var2 = nn.Parameter(torch.as_tensor((((1.0 / self.a) * (1 - (2.0 / args.num_topic))).T +
@@ -251,10 +252,10 @@ class TMSD7(nn.Module):
             # kl_ad = kl_ad.sum(1).view(B, S).mean(1)
             theta_ds = F.softmax(z_e * theta.unsqueeze(1), dim=-1)
             recon = F.softmax(self.decoder_bn((theta_ds @ beta).view(-1, beta.size(1))).view(B, S, -1), dim=-1)
-            x_sub_augment = x_sub
+            x_sub_augment = x_sub + self.args.augment_coef * x.unsqueeze(1)
             nll = -(x_sub_augment * torch.log(recon + 1e-10)).sum(-1).mean()
             kl_adapter = kl_ad.mean()
-            loss_TM = nll + loss_KL + kl_adapter + recon_doc_loss
+            loss_TM = nll + loss_KL + kl_adapter + self.lambda_doc * recon_doc_loss
    
         cost_matrix = self.pairwise_euclidean_distance(self.topic_embeddings, self.word_embeddings)
         optimal_transport_loss = self.ECR(cost_matrix)
