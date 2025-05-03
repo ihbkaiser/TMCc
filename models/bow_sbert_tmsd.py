@@ -65,13 +65,13 @@ class BoW_SBERT_TMSD(nn.Module):
         
         self.ctx_mlp_doc = nn.Sequential(
             nn.Linear(self.embedding_dims, args.en1_units),
-            nn.ReLU(),
+            # nn.ReLU(),
             nn.Linear(args.en1_units, args.vocab_size)
         )
         
         self.ctx_mlp_sub = nn.Sequential(
             nn.Linear(self.embedding_dims, args.en1_units),
-            nn.ReLU(),
+            # nn.ReLU(),
             nn.Linear(args.en1_units, args.vocab_size)
         )
 
