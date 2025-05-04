@@ -39,13 +39,13 @@ class DatasetHandler:
         self.args = SimpleNamespace(data_path=data_path)
         train_doc_path = f"{data_path}/train_bow.npz"
         test_doc_path  = f"{data_path}/test_bow.npz"
-        train_sub_path = f"{data_path}/train_sub.npz"
-        test_sub_path  = f"{data_path}/test_sub.npz"
+        train_sub_path = f"{data_path}/dynamic_subdoc/train_sub.npz"
+        test_sub_path  = f"{data_path}/dynamic_subdoc/test_sub.npz"
         vocab_path     = f"{data_path}/vocab.txt"
         train_contextual_path = f"{data_path}/contextual_data/train_contextual.npz"
         test_contextual_path = f"{data_path}/contextual_data/test_contextual.npz"
-        train_contextual_sub_path = f"{data_path}/train_sub_contextual.npz"
-        test_contextual_sub_path = f"{data_path}/test_sub_contextual.npz"
+        train_contextual_sub_path = f"{data_path}/dynamic_subdoc/train_sub_contextual.npz"
+        test_contextual_sub_path = f"{data_path}/dynamic_subdoc/test_sub_contextual.npz"
         
 
         # Load vocabulary
@@ -226,7 +226,7 @@ if __name__ == "__main__":
         tau=1.0,
         weight_loss_ECR=100.0,
         sinkhorn_alpha=20.0,
-        sinkhorn_max_iter=100,
+        sinkhorn_max_iter=1000,
         augment_coef=0.5,
         data_path=data_path,
         word_embeddings=W_emb,
@@ -234,7 +234,7 @@ if __name__ == "__main__":
 
     model = BoW_SBERT_TMSD(args)
     trainer = BasicTrainer(model, epochs=500, learning_rate=2e-3, batch_size=200,
-                           lr_scheduler=None, lr_step_size=125, log_interval=5)
+                           lr_scheduler="StepLR", lr_step_size=125, log_interval=5)
     tw, train_t = trainer.fit_transform(ds, num_top_words=15, verbose=True)
     trainer.save_beta(out_dir)
     trainer.save_theta(ds, out_dir)
