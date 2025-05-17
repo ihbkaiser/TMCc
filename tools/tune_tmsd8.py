@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from collections import defaultdict
 
 # Ensure project root is on sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(_file_), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import numpy as np
 import torch
