@@ -6,7 +6,7 @@ import logging
 import argparse
 from types import SimpleNamespace
 from collections import defaultdict
-
+from dotenv import load_dotenv
 # Ensure project root is on sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -25,6 +25,9 @@ from topmost import eva
 from utils.coherence_wiki import TC_on_wikipedia
 from utils.static_utils import print_topic_words
 
+load_dotenv()
+
+wandb.login(key=os.getenv("WANDB_API_KEY"), relogin=True)
 # Parse command-line arguments
 parser = argparse.ArgumentParser(description="W&B sweep runner for TMSD6")
 parser.add_argument('--data_path', type=str, default="tm_datasets/BBC_new", help="path to dataset")
