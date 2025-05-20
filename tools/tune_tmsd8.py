@@ -181,13 +181,26 @@ class BasicTrainer:
                 clus = eva._clustering(test_t, ds.y_test)
                 self.logger.info(f"Clustering result: {clus}")
                 tw = self.model.get_top_words(ds.vocab, num_top_words=15)
-                _, cv = TC_on_wikipedia(tw, cv_type="C_V"); self.logger.info(f"Coherence Cv: {cv:.4f}")
+                # _, cv = TC_on_wikipedia(tw, cv_type="C_V"); self.logger.info(f"Coherence Cv: {cv:.4f}")
                 td = eva._diversity([' '.join(t) for t in tw]); self.logger.info(f"Diversity TD: {td:.4f}")
                 irbo = buubyyboo_dth(tw, topk=15)
                 metric_data = {"Coherence_Cv": cv, "Diversity_TD": td, "IRBO": irbo}
                 if isinstance(clus, dict):
                     for ck, cvl in clus.items():
                         metric_data[f"clustering/{ck}"] = cvl
+                wandb.log(metric_data, step=epoch)
+            if epoch == self.epochs:
+                train_t, test_t = self.export_theta(ds)
+                clus = eva._clustering(test_t, ds.y_test)
+                self.logger.info(f"Final clustering result: {clus}")
+                tw = self.model.get_top_words(ds.vocab, num_top_words=15)
+                _, cv = TC_on_wikipedia(tw, cv_type="C_V"); self.logger.info(f"Final Coherence Cv: {cv:.4f}")
+                td = eva._diversity([' '.join(t) for t in tw]); self.logger.info(f"Final Diversity TD: {td:.4f}")
+                irbo = buubyyboo_dth(tw, topk=15)
+                metric_data = {"Final_Coherence_Cv": cv, "Final_Diversity_TD": td, "Final_IRBO": irbo}
+                if isinstance(clus, dict):
+                    for ck, cvl in clus.items():
+                        metric_data[f"final_clustering/{ck}"] = cvl
                 wandb.log(metric_data, step=epoch)
 
     def test(self, data):
