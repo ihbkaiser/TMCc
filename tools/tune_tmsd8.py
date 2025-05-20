@@ -184,7 +184,7 @@ class BasicTrainer:
                 # _, cv = TC_on_wikipedia(tw, cv_type="C_V"); self.logger.info(f"Coherence Cv: {cv:.4f}")
                 td = eva._diversity([' '.join(t) for t in tw]); self.logger.info(f"Diversity TD: {td:.4f}")
                 irbo = buubyyboo_dth(tw, topk=15)
-                metric_data = {"Coherence_Cv": cv, "Diversity_TD": td, "IRBO": irbo}
+                metric_data = {"Diversity_TD": td, "IRBO": irbo}
                 if isinstance(clus, dict):
                     for ck, cvl in clus.items():
                         metric_data[f"clustering/{ck}"] = cvl
