@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from collections import defaultdict
 
 # Ensure project root is on sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(_file_), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import numpy as np
 import torch
@@ -27,10 +27,10 @@ from utils.static_utils import print_topic_words
 
 # Parse command-line arguments
 parser = argparse.ArgumentParser(description="W&B sweep runner for TMSD6")
-parser.add_argument('--data_path', type=str, default="tm_datasets/20NG", help="path to dataset")
-parser.add_argument('--num_topics', type=int, default=100, help="number of topics")
+parser.add_argument('--data_path', type=str, default="tm_datasets/BBC_new", help="path to dataset")
+parser.add_argument('--num_topics', type=int, default=50, help="number of topics")
 parser.add_argument('--device', type=str, default=("cuda" if torch.cuda.is_available() else "cpu"), choices=['cuda', 'cpu'], help="compute device")
-parser.add_argument('--project_name', type=str, default='20NG-100topic-rerun')
+parser.add_argument('--project_name', type=str, default='BBC-50topic-rerun')
 args = parser.parse_args()
 
 # Sweep configuration for W&B
