@@ -22,6 +22,7 @@ from utils.coherence_wiki import TC_on_wikipedia
 from utils.file_utils import read_text
 from utils.irbo import buubyyboo_dth
 
+wandb.login(key='25283834ecbe7bd282505b0721ea3adcd8e789d3', relogin=True)
 
 # Configure logging
 logging.basicConfig(
@@ -74,7 +75,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def load_data(data_path: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def load_data(data_path: str) -> Tuple[list, list, np.ndarray, np.ndarray, list]:
     """Load and preprocess dataset from text files."""
     logger.info("Loading 20 Newsgroups dataset...")
     try:
@@ -82,8 +83,9 @@ def load_data(data_path: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.nd
         train_labels = np.array(read_text(os.path.join(data_path, "train_labels.txt")), dtype=int)
         test_docs = read_text(os.path.join(data_path, "test_texts.txt"))
         test_labels = np.array(read_text(os.path.join(data_path, "test_labels.txt")), dtype=int)
-        logger.info(f"Train docs: {len(train_docs)}, Test docs: {len(test_docs)}")
-        return train_docs, train_labels, test_docs, test_labels         #type: ignore
+        vocabs = read_text(os.path.join(data_path, "vocab.txt"))
+        logger.info(f"Train docs: {len(train_docs)}, Test docs: {len(test_docs)}, Vocab size: {len(vocabs)}")
+        return train_docs, train_labels, test_docs, test_labels, vocabs         #type: ignore
     except FileNotFoundError as e:
         logger.error(f"Dataset files not found: {e}")
         sys.exit(1)
@@ -100,11 +102,12 @@ def train_model(args: argparse.Namespace) -> Tuple[FASTopic, np.ndarray, np.ndar
     })
 
     # Load data
-    train_docs, train_labels, test_docs, test_labels = load_data(args.data_path)
+    train_docs, train_labels, test_docs, test_labels, vocabs = load_data(args.data_path)
 
     # Preprocess data
     logger.info("Preprocessing data...")
-    preprocess = Preprocess(vocab_size=10000)
+    preprocess = Preprocess(vocab_size=len(vocabs))
+    # preprocess = vocabs
 
     # Initialize model
     logger.info(f"Initializing FastTopic model with {args.num_topics} topics...")
