@@ -14,6 +14,7 @@ import datasethandler
 import scipy
 import torch
 import wandb
+from utils.irbo import buubyyboo_dth
 
 RESULT_DIR = 'results'
 DATA_DIR = 'tm_datasets'
@@ -180,6 +181,9 @@ if __name__ == "__main__":
         top_words_15, _type="TD")
     print(f"TD_15: {TD_15:.5f}")
     wandb.log({"TD_15": TD_15})
+    
+    IRBO = buubyyboo_dth(top_words_15)
+    wandb.log({"IRBO": IRBO})
     # logger.info(f"TD_15: {TD_15:.5f}")
 
     # TD_20 = topmost.evaluations.compute_topic_diversity(
