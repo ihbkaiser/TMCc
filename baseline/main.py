@@ -182,7 +182,7 @@ if __name__ == "__main__":
     print(f"TD_15: {TD_15:.5f}")
     wandb.log({"TD_15": TD_15})
     
-    IRBO = buubyyboo_dth(top_words_15)
+    IRBO = buubyyboo_dth(top_words_15, topk=15)
     wandb.log({"IRBO": IRBO})
     # logger.info(f"TD_15: {TD_15:.5f}")
 
