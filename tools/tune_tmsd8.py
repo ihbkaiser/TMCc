@@ -106,10 +106,10 @@ class BasicTrainer:
         epochs: int = 200,
         learning_rate: float = 2e-3,
         batch_size: int = 200,
-        lr_scheduler: str = None,
+        lr_scheduler: str = None,         #type: ignore
         lr_step_size: int = 125,
         log_interval: int = 5,
-        device: str = None
+        device: str = None            #type: ignore
     ):
         self.model = model
         self.epochs = epochs
@@ -163,7 +163,7 @@ class BasicTrainer:
                     loss_acc[k] += v.item() * bs
 
             if self.lr_scheduler:
-                sch.step()
+                sch.step()        #type: ignore
 
             # Log losses to W&B
             log_data = {f"loss/{k}": total / data_size for k, total in loss_acc.items()}
