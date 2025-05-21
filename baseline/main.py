@@ -16,7 +16,7 @@ import torch
 import wandb
 
 RESULT_DIR = 'results'
-DATA_DIR = 'datasets'
+DATA_DIR = 'tm_datasets'
 
 if __name__ == "__main__":
     parser = config.new_parser()
