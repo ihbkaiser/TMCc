@@ -249,24 +249,24 @@ if __name__ == "__main__":
     # logger.info(f'TC_10 list: {TC_10_list}')
 
     # NPMI
-    NPMI_train_10_list, NPMI_train_10 = evaluations.compute_topic_coherence(
-        dataset.train_texts, dataset.vocab, top_words_10, cv_type='c_npmi')
-    print(f"NPMI_train_10: {NPMI_train_10:.5f}, NPMI_train_10_list: {NPMI_train_10_list}")
-    wandb.log({"NPMI_train_10": NPMI_train_10})
-    # logger.info(f"NPMI_train_10: {NPMI_train_10:.5f}")
-    # logger.info(f'NPMI_train_10 list: {NPMI_train_10_list}')
+    # NPMI_train_10_list, NPMI_train_10 = evaluations.compute_topic_coherence(
+    #     dataset.train_texts, dataset.vocab, top_words_10, cv_type='c_npmi')
+    # print(f"NPMI_train_10: {NPMI_train_10:.5f}, NPMI_train_10_list: {NPMI_train_10_list}")
+    # wandb.log({"NPMI_train_10": NPMI_train_10})
+    # # logger.info(f"NPMI_train_10: {NPMI_train_10:.5f}")
+    # # logger.info(f'NPMI_train_10 list: {NPMI_train_10_list}')
 
-    NPMI_wiki_10_list, NPMI_wiki_10 = evaluations.topic_coherence.TC_on_wikipedia(
-        os.path.join(current_run_dir, 'top_words_10.txt'), cv_type='NPMI')
-    print(f"NPMI_wiki_10: {NPMI_wiki_10:.5f}, NPMI_wiki_10_list: {NPMI_wiki_10_list}")
-    wandb.log({"NPMI_wiki_10": NPMI_wiki_10})
-    # logger.info(f"NPMI_wiki_10: {NPMI_wiki_10:.5f}")
-    # logger.info(f'NPMI_wiki_10 list: {NPMI_wiki_10_list}')
+    # NPMI_wiki_10_list, NPMI_wiki_10 = evaluations.topic_coherence.TC_on_wikipedia(
+    #     os.path.join(current_run_dir, 'top_words_10.txt'), cv_type='NPMI')
+    # print(f"NPMI_wiki_10: {NPMI_wiki_10:.5f}, NPMI_wiki_10_list: {NPMI_wiki_10_list}")
+    # wandb.log({"NPMI_wiki_10": NPMI_wiki_10})
+    # # logger.info(f"NPMI_wiki_10: {NPMI_wiki_10:.5f}")
+    # # logger.info(f'NPMI_wiki_10 list: {NPMI_wiki_10_list}')
 
-    Cp_wiki_10_list, Cp_wiki_10 = evaluations.topic_coherence.TC_on_wikipedia(
-        os.path.join(current_run_dir, 'top_words_10.txt'), cv_type='C_P')
-    print(f"Cp_wiki_10: {Cp_wiki_10:.5f}, Cp_wiki_10_list: {Cp_wiki_10_list}")
-    wandb.log({"Cp_wiki_10": Cp_wiki_10})
+    # Cp_wiki_10_list, Cp_wiki_10 = evaluations.topic_coherence.TC_on_wikipedia(
+    #     os.path.join(current_run_dir, 'top_words_10.txt'), cv_type='C_P')
+    # print(f"Cp_wiki_10: {Cp_wiki_10:.5f}, Cp_wiki_10_list: {Cp_wiki_10_list}")
+    # wandb.log({"Cp_wiki_10": Cp_wiki_10})
     # logger.info(f"Cp_wiki_10: {Cp_wiki_10:.5f}")
     # logger.info(f'Cp_wiki_10 list: {Cp_wiki_10_list}')
     
