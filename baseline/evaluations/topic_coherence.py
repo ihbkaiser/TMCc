@@ -5,7 +5,7 @@ from tqdm import tqdm
 from itertools import combinations
 from datasethandler.file_utils import split_text_word
 import os
-
+import tempfile
 
 def compute_topic_coherence(reference_corpus, vocab, top_words, cv_type='c_v'):
     split_top_words = split_text_word(top_words)
@@ -24,19 +24,40 @@ def compute_topic_coherence(reference_corpus, vocab, top_words, cv_type='c_v'):
     return cv_per_topic, score
 
 
-def TC_on_wikipedia(top_word_path, cv_type='C_V'):
-    """
-    Compute the TC score on the Wikipedia dataset
-    """
-    jar_dir = "evaluations"
-    wiki_dir = os.path.join(".", 'datasets')
+def TC_on_wikipedia(top_words: list[list[str]], cv_type: str = 'C_V', jar_dir = "evaluations", wiki_dir: str = ".."):
+    with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.txt', dir='/tmp') as tmp_file:
+        top_word_path = tmp_file.name
+        for topic in top_words:
+            tmp_file.write(" ".join(topic) + "\n")
+    
+    # jar_dir = "evaluations"
+    # wiki_dir = ".."
     random_number = np.random.randint(100000)
-    os.system(
-        f"java -jar {os.path.join(jar_dir, 'pametto.jar')} {os.path.join(wiki_dir, 'wikipedia', 'wikipedia_bd')} {cv_type} {top_word_path} > tmp{random_number}.txt")
+    
+    tmp_output_path = f"/tmp/tmp{random_number}.txt"
+    cmd = (
+        f"java -jar {os.path.join(jar_dir, 'pametto.jar')} "
+        f"{os.path.join(wiki_dir, 'wikipedia_bd')} {cv_type} "
+        f"{top_word_path} > {tmp_output_path}"
+    )
+    os.system(cmd)
+
     cv_score = []
-    with open(f"tmp{random_number}.txt", "r") as f:
-        for line in f.readlines():
-            if not line.startswith("202"):
-                cv_score.append(float(line.strip().split()[1]))
-    os.remove(f"tmp{random_number}.txt")
+    with open(tmp_output_path, "r") as f:
+        for line in f:
+            parts = line.strip().split()
+            if len(parts) < 2:
+                continue
+            try:
+                score = float(parts[1])
+                cv_score.append(score)
+            except ValueError:
+                print(f"[WARN] Skipped line (not a float): {line.strip()}")
+                continue
+    # os.remove(top_word_path)
+    # os.remove(tmp_output_path)
+
+    if len(cv_score) == 0:
+        return [], 0.0
+    
     return cv_score, sum(cv_score) / len(cv_score)
