@@ -9,6 +9,7 @@ from models.CTM import CTM
 from models.ETM import ETM
 from models.ProdLDA import ProdLDA
 from models.WETE import WeTe
+from models.NeuroMax.NeuroMax import NeuroMax
 import evaluations
 import datasethandler
 import scipy
@@ -17,7 +18,7 @@ import wandb
 from utils.irbo import buubyyboo_dth
 
 RESULT_DIR = 'results'
-DATA_DIR = 'tm_datasets'
+DATA_DIR = '../tm_datasets'
 
 if __name__ == "__main__":
     parser = config.new_parser()
@@ -41,7 +42,7 @@ if __name__ == "__main__":
     
     logger = log.setup_logger(
         'main', os.path.join(current_run_dir, 'main.log'))
-    wandb.login(key="")
+    wandb.login(key="310a55c05dddcb613cca321462ce09071beebcb7")
     wandb.init(project=prj, config=args)
     wandb.log({'time_stamp': current_time})
 
@@ -87,6 +88,9 @@ if __name__ == "__main__":
                     dropout=args.dropout)
     elif args.model == "WeTe":
         model = WeTe(vocab_size=dataset.vocab_size, vocab=dataset.vocab, num_topics=args.num_topics,device=args.device)
+    elif args.model == "NeuroMax":
+        model = NeuroMax(vocab_size=dataset.vocab_size, num_topics=args.num_topics,
+                         pretrained_WE = pretrainWE if args.use_pretrainWE else None)
     model = model.to(args.device)
 
     # create a trainer
@@ -110,6 +114,13 @@ if __name__ == "__main__":
                                             batch_size=args.batch_size,
                                             lr_scheduler=args.lr_scheduler,
                                             lr_step_size=args.lr_step_size)
+    elif args.model == "NeuroMax":
+        trainer = basic_trainer.NeuroMaxBasicTrainer(model, epochs=args.epochs,
+                                            learning_rate=args.lr,
+                                            batch_size=args.batch_size,
+                                            lr_scheduler=args.lr_scheduler,
+                                            lr_step_size=args.lr_step_size,
+                                )
     else:
         trainer = basic_trainer.BasicTrainer(model, epochs=args.epochs,
                                             learning_rate=args.lr,
@@ -181,9 +192,11 @@ if __name__ == "__main__":
         top_words_15, _type="TD")
     print(f"TD_15: {TD_15:.5f}")
     wandb.log({"TD_15": TD_15})
+    topics_words = [topic.replace("'", "").split() for topic in top_words_15]
     
-    IRBO = buubyyboo_dth(top_words_15)
+    IRBO = buubyyboo_dth(topics_words, topk = 15)
     wandb.log({"IRBO": IRBO})
+    print(f"IRBO: {IRBO:.5f}")
     # logger.info(f"TD_15: {TD_15:.5f}")
 
     # TD_20 = topmost.evaluations.compute_topic_diversity(
@@ -222,7 +235,7 @@ if __name__ == "__main__":
 
     # TC
     TC_15_list, TC_15 = evaluations.topic_coherence.TC_on_wikipedia(
-        os.path.join(current_run_dir, 'top_words_15.txt'))
+        topics_words)
     print(f"TC_15: {TC_15:.5f}")
     wandb.log({"TC_15": TC_15})
     # logger.info(f"TC_15: {TC_15:.5f}")
