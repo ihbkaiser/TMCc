@@ -42,7 +42,7 @@ if __name__ == "__main__":
     
     logger = log.setup_logger(
         'main', os.path.join(current_run_dir, 'main.log'))
-    wandb.login(key="310a55c05dddcb613cca321462ce09071beebcb7")
+    wandb.login(key="XXX")
     wandb.init(project=prj, config=args)
     wandb.log({'time_stamp': current_time})
 
@@ -90,7 +90,8 @@ if __name__ == "__main__":
         model = WeTe(vocab_size=dataset.vocab_size, vocab=dataset.vocab, num_topics=args.num_topics,device=args.device)
     elif args.model == "NeuroMax":
         model = NeuroMax(vocab_size=dataset.vocab_size, num_topics=args.num_topics,
-                         pretrained_WE = pretrainWE if args.use_pretrainWE else None)
+                         pretrained_WE = pretrainWE if args.use_pretrainWE else None,
+                         weight_loss_ECR=args.weight_ECR)
     model = model.to(args.device)
 
     # create a trainer
