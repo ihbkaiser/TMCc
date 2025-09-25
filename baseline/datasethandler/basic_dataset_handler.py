@@ -8,7 +8,7 @@ from . import file_utils
 import os
 
 
-def load_contextual_embed(texts, device, model_name="all-mpnet-base-v2", show_progress_bar=True):
+def load_contextual_embed(texts, device, model_name="all-MiniLM-L6-v2", show_progress_bar=True):
     model = SentenceTransformer(model_name, device=device)
     embeddings = model.encode(texts, show_progress_bar=show_progress_bar)
     return embeddings

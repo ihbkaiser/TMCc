@@ -2,14 +2,14 @@ import os
 import numpy as np
 import tempfile
 
-def TC_on_wikipedia(top_words: list[list[str]], cv_type: str = 'C_V'):
+def TC_on_wikipedia(top_words: list[list[str]], cv_type: str = 'C_V', jar_dir = ".", wiki_dir = "."):
     with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.txt', dir='/tmp') as tmp_file:
         top_word_path = tmp_file.name
         for topic in top_words:
             tmp_file.write(" ".join(topic) + "\n")
     
-    jar_dir = "." 
-    wiki_dir = "."  
+    jar_dir = jar_dir
+    wiki_dir = wiki_dir
     random_number = np.random.randint(100000)
     
     tmp_output_path = f"/tmp/tmp{random_number}.txt"

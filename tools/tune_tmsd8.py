@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 
 import os
 import sys
@@ -30,10 +30,10 @@ load_dotenv()
 wandb.login(key=os.getenv("WANDB_API_KEY"), relogin=True)
 # Parse command-line arguments
 parser = argparse.ArgumentParser(description="W&B sweep runner for TMSD6")
-parser.add_argument('--data_path', type=str, default="tm_datasets/BBC_new", help="path to dataset")
+parser.add_argument('--data_path', type=str, default="tm_datasets/WOS_medium", help="path to dataset")
 parser.add_argument('--num_topics', type=int, default=50, help="number of topics")
-parser.add_argument('--device', type=str, default=("cuda" if torch.cuda.is_available() else "cpu"), choices=['cuda', 'cpu'], help="compute device")
-parser.add_argument('--project_name', type=str, default='BBC-50topic-rerun')
+parser.add_argument('--device', type=str, default=("cuda" if torch.cuda.is_available() else "cpu"), help="compute device")
+parser.add_argument('--project_name', type=str, default='WoS_medium_100')
 args = parser.parse_args()
 
 # Sweep configuration for W&B
@@ -42,12 +42,26 @@ sweep_config = {
     'metric': { 'name': 'Coherence_Cv', 'goal': 'maximize' },
     'parameters': {
         # alpha for KL adapter
-        'adapter_alpha':   { 'values': [0.1, 0.01, 0.001] },
-        'weight_loss_ECR': { 'values': [200, 250, 60, 400, 100, 150, 300] },
+        # 'adapter_alpha':   { 'values': [0.1, 0.01, 0.001] },
+        'adapter_alpha':   { 'values': [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005] },
+        
+        # weight for ECR loss
+        # 'weight_loss_ECR': { 'values': [200, 250, 60, 400, 100, 150, 300] },
+        'weight_loss_ECR': { 'values': [50, 60, 80, 100, 150, 200, 250, 300, 350, 400, 500] },
+        
         # lambda for document full theta reconstruction
-        'lambda_doc':      { 'values': [1.0, 0.5, 0.2, 0.0] },
-        'augment_coef':    { 'value': 0.0 },
-        'learning_rate':   { 'value': 2e-3 },
+        # 'lambda_doc':      { 'values': [1.0, 0.5, 0.2, 0.0] },
+        'lambda_doc':      { 'values': [1.0, 0.8, 0.5, 0.3, 0.2, 0.1, 0.0] },
+        
+        # augmentation coefficient
+        # 'augment_coef':    { 'value': 0.0 },
+        'augment_coef':    { 'values': [0.0, 0.05, 0.1, 0.2] },
+        
+        # Learning rate
+        # 'learning_rate':   { 'value': 2e-3 },
+        'learning_rate':   { 'values': [5e-4, 1e-3, 2e-3, 5e-3, 1e-2] },
+        
+        # Fixed parameters
         'epochs':          { 'value': 500 },
         'batch_size':      { 'value': 200 },
         'lr_step_size':    { 'value': 125 },
@@ -64,8 +78,10 @@ class DatasetHandler:
     def __init__(self, data_path, batch_size):
         train_doc_path = f"{data_path}/train_bow.npz"
         test_doc_path  = f"{data_path}/test_bow.npz"
-        train_sub_path = f"{data_path}/dynamic_subdoc/train_sub.npz"
-        test_sub_path  = f"{data_path}/dynamic_subdoc/test_sub.npz"
+        # train_sub_path = f"{data_path}/dynamic_subdoc/train_sub.npz"
+        # test_sub_path  = f"{data_path}/dynamic_subdoc/test_sub.npz"
+        train_sub_path = f"{data_path}/sub_sentence/train_subsent.npz"
+        test_sub_path  = f"{data_path}/sub_sentence/test_subsent.npz"
         vocab_path     = f"{data_path}/vocab.txt"
 
         # Load vocabulary
@@ -121,7 +137,7 @@ class BasicTrainer:
 
         self.logger = logging.getLogger('main')
         # Use provided device or default
-        self.device = torch.device(device if device else ('cuda' if torch.cuda.is_available() else 'cpu'))
+        self.device = args.device
         self.model.to(self.device)
 
     def make_optimizer(self):
@@ -176,32 +192,32 @@ class BasicTrainer:
                 print(msg)
                 self.logger.info(msg)
 
-            if epoch % 20 == 0:
+            if epoch % 50 == 0:
                 train_t, test_t = self.export_theta(ds)
                 clus = eva._clustering(test_t, ds.y_test)
                 self.logger.info(f"Clustering result: {clus}")
                 tw = self.model.get_top_words(ds.vocab, num_top_words=15)
-                # _, cv = TC_on_wikipedia(tw, cv_type="C_V"); self.logger.info(f"Coherence Cv: {cv:.4f}")
+                _, cv = TC_on_wikipedia(tw, cv_type="C_V"); self.logger.info(f"Coherence Cv: {cv:.4f}")
                 td = eva._diversity([' '.join(t) for t in tw]); self.logger.info(f"Diversity TD: {td:.4f}")
                 irbo = buubyyboo_dth(tw, topk=15)
-                metric_data = {"Diversity_TD": td, "IRBO": irbo}
+                metric_data = {"Cv": cv, "Diversity_TD": td, "IRBO": irbo}
                 if isinstance(clus, dict):
                     for ck, cvl in clus.items():
-                        metric_data[f"clustering/{ck}"] = cvl
+                        metric_data[f"{ck}"] = cvl
                 wandb.log(metric_data, step=epoch)
-            if epoch == self.epochs:
-                train_t, test_t = self.export_theta(ds)
-                clus = eva._clustering(test_t, ds.y_test)
-                self.logger.info(f"Final clustering result: {clus}")
-                tw = self.model.get_top_words(ds.vocab, num_top_words=15)
-                _, cv = TC_on_wikipedia(tw, cv_type="C_V"); self.logger.info(f"Final Coherence Cv: {cv:.4f}")
-                td = eva._diversity([' '.join(t) for t in tw]); self.logger.info(f"Final Diversity TD: {td:.4f}")
-                irbo = buubyyboo_dth(tw, topk=15)
-                metric_data = {"Final_Coherence_Cv": cv, "Final_Diversity_TD": td, "Final_IRBO": irbo}
-                if isinstance(clus, dict):
-                    for ck, cvl in clus.items():
-                        metric_data[f"final_clustering/{ck}"] = cvl
-                wandb.log(metric_data, step=epoch)
+            # if epoch == self.epochs:
+            #     train_t, test_t = self.export_theta(ds)
+            #     clus = eva._clustering(test_t, ds.y_test)
+            #     self.logger.info(f"Final clustering result: {clus}")
+            #     tw = self.model.get_top_words(ds.vocab, num_top_words=15)
+            #     _, cv = TC_on_wikipedia(tw, cv_type="C_V"); self.logger.info(f"Final Coherence Cv: {cv:.4f}")
+            #     td = eva._diversity([' '.join(t) for t in tw]); self.logger.info(f"Final Diversity TD: {td:.4f}")
+            #     irbo = buubyyboo_dth(tw, topk=15)
+            #     metric_data = {"Final_Coherence_Cv": cv, "Final_Diversity_TD": td, "Final_IRBO": irbo}
+            #     if isinstance(clus, dict):
+            #         for ck, cvl in clus.items():
+            #             metric_data[f"final_clustering/{ck}"] = cvl
+            #     wandb.log(metric_data, step=epoch)
 
     def test(self, data):
         self.model.eval()
@@ -239,7 +255,7 @@ def train():
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     data_path = args.data_path
-    out_dir = "outputs/tmsd6"
+    out_dir = "/home/ducanh/Credit/TM-clusterrin/outputs/saentm"
     os.makedirs(out_dir, exist_ok=True)
 
     ds = DatasetHandler(data_path=data_path, batch_size=config.batch_size)

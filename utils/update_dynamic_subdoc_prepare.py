@@ -113,9 +113,9 @@ def build_fixed_subdocs(
 def main():
    
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_path',     type=str, default="tm_datasets/BBC_new",
+    parser.add_argument('--data_path',     type=str, default="tm_datasets/WOS_medium",
                         help="dir with train_texts.txt, test_texts.txt, vocab.txt")
-    parser.add_argument('--output_dir',    type=str, default='tm_datasets/BBC_new/dynamic_subdoc',
+    parser.add_argument('--output_dir',    type=str, default='tm_datasets/WOS_medium/dynamic_subdoc',
                         help="where to save the .npz files")
     args = parser.parse_args()
    
@@ -131,8 +131,8 @@ def main():
     num_words_per_doc = [len(doc.split()) for doc in documents]
     W = sum(num_words_per_doc) // len(num_words_per_doc)
    
-    parser.add_argument('--window_size',   type=int, default=W//3)
-    parser.add_argument('--stride',        type=int, default=W//3 - 10)
+    parser.add_argument('--window_size',   type=int, default=50)
+    parser.add_argument('--stride',        type=int, default=40)
     args = parser.parse_args()
 
 

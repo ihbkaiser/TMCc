@@ -102,12 +102,12 @@ def build_fixed_subdocs(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_path',     type=str, default="tm_datasets/20NG",
+    parser.add_argument('--data_path',     type=str, default="tm_datasets/WOS_medium",
                         help="dir with train_texts.txt, test_texts.txt, vocab.txt")
-    parser.add_argument('--output_dir',    type=str, default='tm_datasets/20NG/dynamic_subdoc',
+    parser.add_argument('--output_dir',    type=str, default='tm_datasets/WOS_medium/dynamic_subdoc',
                         help="where to save the .npz files")
-    parser.add_argument('--window_size',   type=int, default=50)
-    parser.add_argument('--stride',        type=int, default=40)
+    parser.add_argument('--window_size',   type=int, default=30)
+    parser.add_argument('--stride',        type=int, default=24)
     parser.add_argument('--batch_size',    type=int, default=32)
     parser.add_argument('--model_name',    type=str,
                         default="sentence-transformers/all-MiniLM-L6-v2")
